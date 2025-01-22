@@ -9,6 +9,10 @@ class CardGenerator {
         };
     }
 
+    processBin(bin) {
+        return bin.replace(/x/gi, () => Math.floor(Math.random() * 10));
+    }
+
     showToast(message, type = 'success') {
         const toast = document.getElementById('toast');
         toast.className = `toast ${type}`;
@@ -18,36 +22,51 @@ class CardGenerator {
     }
 
     detectCardType(bin) {
+        const cleanBin = bin.replace(/x/gi, '0');
         for (const [type, pattern] of Object.entries(this.cardPatterns)) {
-            if (pattern.test(bin)) return type;
+            if (pattern.test(cleanBin)) return type;
         }
         return 'unknown';
     }
 
     validateBin(bin) {
+        const rawBin = bin.replace(/x/gi, '');
         const type = this.detectCardType(bin);
-        const length = bin.length;
+        const xCount = (bin.match(/x/gi) || []).length;
+        const totalLength = rawBin.length + xCount;
+        
         const rules = {
-            visa: length >= 6 && length <= 19,
-            mastercard: length === 5,
-            amex: length === 6,
-            discover: length === 6,
-            diners: length === 3
+            visa: totalLength >= 6 && totalLength <= 19,
+            mastercard: totalLength === 5,
+            amex: totalLength === 6,
+            discover: totalLength === 6,
+            diners: totalLength === 3
         };
-        return rules[type] || length >= 6 && length <= 14;
+        
+        const xLimits = {
+            visa: 13,
+            mastercard: 10,
+            amex: 8,
+            discover: 9,
+            diners: 11,
+            unknown: 9
+        };
+
+        return rules[type] || (totalLength >= 6 && totalLength <= 14) && xCount <= (xLimits[type] || 9);
     }
 
     generateCard(bin) {
-        const isAmex = bin.startsWith('34') || bin.startsWith('37');
+        const processedBin = this.processBin(bin);
+        const isAmex = processedBin.startsWith('34') || processedBin.startsWith('37');
         const targetLength = isAmex ? 15 : 16;
-        const remainingDigits = targetLength - bin.length - 1;
+        const remainingDigits = targetLength - processedBin.length - 1;
 
         if (remainingDigits < 0) {
             this.showToast(`BIN too long (max ${targetLength - 1} digits)`, 'error');
             return { valid: false };
         }
 
-        let cardNumber = bin;
+        let cardNumber = processedBin;
         for (let i = 0; i < remainingDigits; i++) {
             cardNumber += Math.floor(Math.random() * 10);
         }
@@ -169,8 +188,9 @@ function validateBin(bin) {
 }
 
 function updateCardPreview(bin) {
-    const type = generator.detectCardType(bin);
-    const previewNumber = bin.padEnd(16, 'X').match(/.{1,4}/g).join(' ');
+    const processedBin = generator.processBin(bin);
+    const type = generator.detectCardType(processedBin);
+    const previewNumber = processedBin.padEnd(16, 'X').match(/.{1,4}/g).join(' ');
     
     document.getElementById('previewCardType').textContent = type.toUpperCase();
     document.getElementById('previewCardNumber').textContent = previewNumber;
