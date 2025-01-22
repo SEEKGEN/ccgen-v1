@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SeekGen Pro - Secure Card Generator</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loading-spinner" style="width: 40px; height: 40px; color: white"></div>
+    </div>
+
+    <header class="main-header">
+        <a href="#" class="logo">
+            <div class="logo-design"></div>
+            <span class="brand-name">SeekGen</span>
+        </a>
+    </header>
+
+    <div class="toast" id="toast"></div>
+    <div class="theme-toggle" onclick="toggleTheme()" role="button" aria-label="Toggle theme">
+        <svg class="theme-icon moon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+        </svg>
+        <svg class="theme-icon sun" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display: none;">
+            <circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+        </svg>
+    </div>
+
+    <div class="container">
+        <div class="input-row">
+            <div class="input-group">
+                <label>Number of Cards</label>
+                <input type="number" id="cardQuantity" min="1" max="50" value="1"
+                       oninput="this.value=Math.max(1,Math.min(50,this.value))">
+            </div>
+            <div class="input-group">
+                <label>BIN Number</label>
+                <input type="text" id="binInput" placeholder="6-14 digits"
+                       oninput="validateBin(this.value)" maxlength="14">
+                <div id="binError" class="validation-message"></div>
+            </div>
+        </div>
+
+        <div class="input-row">
+            <div class="input-group">
+                <label>Expiration Month</label>
+                <select id="expMonth">
+                    <option value="">Random</option>
+                    <option value="01">01</option><option value="02">02</option>
+                    <option value="03">03</option><option value="04">04</option>
+                    <option value="05">05</option><option value="06">06</option>
+                    <option value="07">07</option><option value="08">08</option>
+                    <option value="09">09</option><option value="10">10</option>
+                    <option value="11">11</option><option value="12">12</option>
+                </select>
+            </div>
+            <div class="input-group">
+                <label>Expiration Year</label>
+                <select id="expYear">
+                    <option value="">Random</option>
+                    <option value="25">2025</option><option value="26">2026</option>
+                    <option value="27">2027</option><option value="28">2028</option>
+                    <option value="29">2029</option><option value="30">2030</option>
+                </select>
+            </div>
+            <div class="input-group">
+                <label>CVV Code</label>
+                <input type="text" id="cvvInput" placeholder="Random" 
+                       maxlength="4" oninput="this.value=this.value.replace(/\D/g,'')">
+                <div id="cvvError" class="error"></div>
+            </div>
+        </div>
+
+        <div class="card-preview" id="cardPreview">
+            <div class="card-type" id="previewCardType">UNKNOWN</div>
+            <div class="card-number" id="previewCardNumber">XXXX XXXX XXXX XXXX</div>
+            <div class="card-expiry" id="previewExpiry">MM/YY</div>
+        </div>
+
+        <div id="cardList"></div>
+
+        <div style="display: grid; gap: 1rem;">
+            <button onclick="generateCards()">
+                <svg style="width:20px;height:20px" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+                </svg>
+                Generate Cards
+            </button>
+            <button onclick="copyAllCards()">
+                <svg style="width:20px;height:20px" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                </svg>
+                Copy All
+            </button>
+            <div class="export-group">
+                <button onclick="exportCards()">
+                    <svg style="width:20px;height:20px" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                    </svg>
+                    Export
+                </button>
+                <select id="exportFormat">
+                    <option value="txt">TXT</option>
+                    <option value="csv">CSV</option>
+                    <option value="json">JSON</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="disclaimer">
+            <strong>Security Notice:</strong> Generated numbers are for testing purposes only.<br>
+            These are not real payment cards. Never use actual card information.
+        </div>
+    </div>
+
+    <footer class="main-footer">
+        <div class="footer-content">
+            <div class="footer-links">
+                <a href="#" class="footer-link">About</a>
+                <a href="#" class="footer-link">Contact</a>
+                <a href="#" class="footer-link">Privacy Policy</a>
+            </div>
+            <div class="copyright">
+                Copyright © SeekGen - 2025
+            </div>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>
